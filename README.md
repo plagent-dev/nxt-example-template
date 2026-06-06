@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# nxt-example-template
 
-## Getting Started
+## What This Is
 
-First, run the development server:
+A static Next.js component showcase template. Part of the PL Agent framework. Used to build, preview, and test UI blocks before promoting them to a Payload CMS working project.
+
+## Quick Start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the catalog.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Customize Your Brand
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Edit `src/site.config.ts` — set your project name, tagline, logo path, and brand colors. Edit `--brand-primary` and `--brand-alt` in `src/app/globals.css` to match.
 
-## Learn More
+## How to Add a New Block (the 4-file convention)
 
-To learn more about Next.js, take a look at the following resources:
+Every block is a folder under `src/components/blocks/<BlockName>/` with 4 files:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `Component.tsx` — the React component
+- `types.ts` — TypeScript props/types
+- `meta.ts` — metadata for the showcase catalog
+- `fixtures.tsx` — demo data for previewing variants
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## How to Add a Page to the Catalog
 
-## Deploy on Vercel
+1. Create `src/app/<slug>/page.tsx`
+2. Add an entry to `src/showcase-pages.ts`
+3. It auto-appears in the header nav and the front-page catalog
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Workflow — How This Template Fits Into a Project
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This showcase is **not** your production site. It's a sandbox for building components.
+
+1. Clone this template at the same Next.js version as your working project
+2. Build blocks here using the 4-file convention
+3. Preview and review each block visually in the showcase
+4. Once approved, promote the block to your working project (copy the component folder, adapt imports for Payload CMS data)
+5. Verify the block renders correctly in the working project
+
+**Important:** Keep the Next.js version in this showcase aligned with your working project. Version drift between the two causes bugs when promoting blocks.
+
+## Version Pinning
+
+Create a `VERSION_LOCK.md` in the root after cloning (rename `VERSION_LOCK.template.md`):
+
+```markdown
+Working repo: {your-repo-name}
+Next.js: {version}
+Last synced: {date}
+```
+
+Check this before every visual milestone. If versions have drifted, update the showcase first.
+
+## Brand Colors
+
+The two CSS variables `--brand-primary` and `--brand-alt` in `globals.css` control the site-wide color scheme. Change these to match your project's brand. Components use these via Tailwind utilities (`bg-brand-primary`, `text-brand-alt`).
