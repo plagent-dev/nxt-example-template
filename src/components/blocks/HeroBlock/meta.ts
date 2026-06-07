@@ -1,16 +1,15 @@
-/**
- * Showcase catalog metadata for the Hero Block.
- *
- * Follows the shared block-meta pattern:
- *   { name, description, category, variants, presetCount }
- */
-export const heroBlockMeta = {
+import type { ComponentMeta } from '@/types/registry'
+
+export const heroBlockMeta: ComponentMeta = {
   name: 'Hero Block',
+  slug: 'hero-block',
+  category: 'Blocks',
+  status: 'ready',
   description:
-    'A page hero with three layouts: a full-bleed auto-advancing carousel, plus medium and short static headers. Supports a dark overlay, optional background image, and a brand-color fallback.',
-  category: 'Heroes',
-  variants: ['full', 'medium', 'short'] as const,
+    'Fixture-driven hero block with background, split, and compact variants using the bundled template images.',
   presetCount: 3,
+  fixtureCount: 3,
+  promoteTarget: 'Payload block',
 }
 
 export default heroBlockMeta

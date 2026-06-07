@@ -1,272 +1,148 @@
-'use client'
-
-import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 
-import type {
-  HeroBlockProps,
-  HeroCarouselProps,
-  HeroSize,
-  HeroStaticProps,
-} from './types'
+import type { HeroAction, HeroAlignment, HeroBlockProps } from './types'
 
-// ─── Full: Carousel (auto-advance, dots, arrows, swipe) ─────────────────────
+const alignmentClasses: Record<HeroAlignment, string> = {
+  left: 'text-left items-start',
+  center: 'text-center items-center mx-auto',
+  right: 'text-right items-end ml-auto',
+}
 
-function FullCarousel({ slides }: HeroCarouselProps) {
-  const [current, setCurrent] = useState(0)
-  const [isTransitioning, setIsTransitioning] = useState(false)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const pointerStartX = useRef<number | null>(null)
+const splitAlignmentClasses: Record<HeroAlignment, string> = {
+  left: 'text-left items-start',
+  center: 'text-center items-center',
+  right: 'text-right items-end',
+}
 
-  const goTo = useCallback(
-    (index: number) => {
-      if (isTransitioning) return
-      setIsTransitioning(true)
-      setTimeout(() => {
-        setCurrent(index)
-        setIsTransitioning(false)
-      }, 300)
-    },
-    [isTransitioning],
-  )
-
-  const goNext = useCallback(() => {
-    goTo((current + 1) % slides.length)
-  }, [current, goTo, slides.length])
-
-  const goPrev = useCallback(() => {
-    goTo((current - 1 + slides.length) % slides.length)
-  }, [current, goTo, slides.length])
-
-  useEffect(() => {
-    timerRef.current = setTimeout(goNext, 5000)
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-    }
-  }, [current, goNext])
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    pointerStartX.current = e.clientX
-  }
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (pointerStartX.current === null) return
-    const delta = e.clientX - pointerStartX.current
-    if (delta > 48) goPrev()
-    else if (delta < -48) goNext()
-    pointerStartX.current = null
-  }
-
-  const slide = slides[current]
+function Actions({ actions, inverse = false }: { actions?: HeroAction[]; inverse?: boolean }) {
+  if (!actions?.length) return null
 
   return (
-    <section
-      className="group/hero relative flex min-h-[70vh] items-end overflow-hidden md:min-h-[80vh]"
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-    >
-      {/* Background images — cross-fade */}
-      {slides.map((s, i) => (
-        <div
-          key={s.id ?? s.image.src}
-          className="absolute inset-0 transition-opacity duration-700"
-          style={{ opacity: i === current ? 1 : 0 }}
-        >
-          <Image
-            src={s.image.src}
-            alt={s.image.alt}
-            fill
-            priority={i === 0}
-            className="object-cover object-center"
-            sizes="100vw"
-          />
-        </div>
-      ))}
+    <div className="mt-8 flex flex-wrap gap-3">
+      {actions.map((action) => {
+        const isSecondary = action.tone === 'secondary'
+        const classes = inverse
+          ? isSecondary
+            ? 'border border-white/40 bg-white/10 text-white hover:bg-white/20'
+            : 'bg-white text-zinc-950 hover:bg-zinc-100'
+          : isSecondary
+            ? 'border border-black/15 bg-white text-zinc-800 hover:bg-zinc-50'
+            : 'bg-brand-primary text-brand-alt hover:bg-zinc-800'
 
-      {/* Dark overlay — gradient stronger at bottom */}
-      <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
-
-      {/* Content — bottom-anchored */}
-      <div className="relative z-20 w-full pb-16 md:pb-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <div
-            className="transition-opacity duration-300"
-            style={{ opacity: isTransitioning ? 0 : 1 }}
+        return (
+          <Link
+            key={`${action.label}-${action.href}`}
+            href={action.href}
+            className={`rounded-md px-4 py-2.5 text-sm font-semibold transition-colors ${classes}`}
           >
-            {slide?.heading && (
-              <h1 className="mb-6 max-w-4xl text-balance text-4xl font-medium leading-[1.02] tracking-[-0.03em] text-white md:text-6xl lg:text-7xl">
-                {slide.heading}
-              </h1>
-            )}
-            {slide?.subtitle && (
-              <p className="mb-8 max-w-xl text-base leading-8 text-white/88 md:text-lg">
-                {slide.subtitle}
-              </p>
-            )}
-            {slide?.ctaLabel && slide?.ctaUrl && (
-              <Link
-                href={slide.ctaUrl}
-                className="inline-block rounded-lg bg-brand-alt px-8 py-4 text-base font-semibold text-brand-primary transition-colors duration-200 hover:bg-white hover:text-brand-primary"
-              >
-                {slide.ctaLabel}
-              </Link>
-            )}
-          </div>
-
-          {/* Dot navigation — bar style */}
-          {slides.length > 1 && (
-            <div className="mt-10 flex items-center gap-3">
-              {slides.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => goTo(i)}
-                  aria-label={`Go to slide ${i + 1}`}
-                  className={`h-1 rounded-full transition-all duration-300 ${
-                    i === current
-                      ? 'w-8 bg-brand-alt'
-                      : 'w-4 bg-white/50 hover:bg-brand-alt'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Arrow buttons — appear on hover */}
-      {slides.length > 1 && (
-        <>
-          <button
-            type="button"
-            onClick={goPrev}
-            aria-label="Previous slide"
-            className="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/20 text-white opacity-60 backdrop-blur-sm transition-all duration-200 hover:bg-brand-alt hover:text-brand-primary focus:opacity-100 group-hover/hero:opacity-100 hover:opacity-100 md:left-8 md:opacity-0"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 16 16">
-              <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={goNext}
-            aria-label="Next slide"
-            className="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/20 text-white opacity-60 backdrop-blur-sm transition-all duration-200 hover:bg-brand-alt hover:text-brand-primary focus:opacity-100 group-hover/hero:opacity-100 hover:opacity-100 md:right-8 md:opacity-0"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 16 16">
-              <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </>
-      )}
-    </section>
+            {action.label}
+          </Link>
+        )
+      })}
+    </div>
   )
 }
 
-// ─── Medium / Short: Static header ──────────────────────────────────────────
-
-const sizeClasses: Record<string, string> = {
-  medium: 'h-[320px] md:h-[400px]',
-  short: 'h-[200px] md:h-[260px]',
-}
-
-const paddingClasses: Record<string, string> = {
-  medium: 'pb-10 md:pb-14',
-  short: 'pb-6 md:pb-8',
-}
-
-const titleClasses: Record<string, string> = {
-  medium: 'text-4xl md:text-6xl lg:text-7xl font-medium tracking-[-0.03em] leading-[1.02] max-w-4xl',
-  short: 'text-2xl md:text-5xl font-medium tracking-[-0.025em] leading-[1.05] max-w-4xl',
-}
-
-const subtitleClasses: Record<string, string> = {
-  medium: 'mt-4 text-base md:text-lg leading-7 max-w-3xl text-white/95',
-  short: 'mt-3 text-sm md:text-base leading-6 max-w-3xl text-white/95',
-}
-
-function StaticHeader({
-  size,
-  title,
-  subtitle,
-  image,
-  headingAlignment,
-  children,
-  childrenPosition = 'below',
-}: HeroStaticProps) {
-  const hasImage = Boolean(image?.src)
-  const alignment =
-    headingAlignment === 'center'
-      ? 'text-center mx-auto'
-      : headingAlignment === 'right'
-        ? 'text-right ml-auto'
-        : 'text-left'
+function Eyebrow({ children, inverse = false }: { children?: string; inverse?: boolean }) {
+  if (!children) return null
 
   return (
-    <section
-      className={`relative overflow-hidden text-white ${sizeClasses[size] || sizeClasses.medium}${
-        hasImage ? '' : ' bg-[var(--brand-primary)]'
+    <p
+      className={`mb-4 text-xs font-semibold ${
+        inverse ? 'text-white/75' : 'text-foreground/50'
       }`}
     >
-      {hasImage && image && (
-        <>
-          <Image
-            src={image.src}
-            alt={image.alt}
-            fill
-            className="object-cover object-center"
-            sizes="100vw"
-            priority
-          />
-          <div className="absolute inset-0 bg-black/55" />
-        </>
+      {children}
+    </p>
+  )
+}
+
+function BackgroundHero({ eyebrow, title, subtitle, image, alignment = 'left', actions }: HeroBlockProps) {
+  const alignmentClass = alignmentClasses[alignment]
+
+  return (
+    <section className="relative isolate flex min-h-[520px] items-end overflow-hidden bg-zinc-950 text-white">
+      {image && (
+        <Image
+          src={image.src}
+          alt={image.alt}
+          fill
+          priority
+          sizes="100vw"
+          className="absolute inset-0 -z-20 object-cover"
+        />
       )}
-
-      <div
-        className={`relative z-10 mx-auto flex h-full max-w-6xl flex-col justify-end px-6 ${
-          paddingClasses[size] || paddingClasses.medium
-        }`}
-      >
-        <div className={alignment}>
-          {children && childrenPosition === 'above' && children}
-
-          {title && <h1 className={titleClasses[size] || titleClasses.medium}>{title}</h1>}
-
-          {subtitle && (
-            <p className={subtitleClasses[size] || subtitleClasses.medium}>{subtitle}</p>
-          )}
-
-          {children && childrenPosition === 'below' && <div className="mt-5">{children}</div>}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/45 to-black/20" />
+      <div className="mx-auto w-full max-w-6xl px-6 py-16 md:py-24">
+        <div className={`flex max-w-3xl flex-col ${alignmentClass}`}>
+          <Eyebrow inverse>{eyebrow}</Eyebrow>
+          <h1 className="max-w-4xl text-balance text-4xl font-semibold leading-tight tracking-tight md:text-6xl">
+            {title}
+          </h1>
+          {subtitle && <p className="mt-5 max-w-2xl text-base leading-8 text-white/80 md:text-lg">{subtitle}</p>}
+          <Actions actions={actions} inverse />
         </div>
       </div>
     </section>
   )
 }
 
-// ─── Top-level dispatcher ───────────────────────────────────────────────────
+function SplitHero({ eyebrow, title, subtitle, image, alignment = 'left', actions }: HeroBlockProps) {
+  return (
+    <section className="bg-white">
+      <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)] lg:items-center lg:py-20">
+        <div className={`flex flex-col ${splitAlignmentClasses[alignment]}`}>
+          <Eyebrow>{eyebrow}</Eyebrow>
+          <h1 className="max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight text-foreground md:text-5xl">
+            {title}
+          </h1>
+          {subtitle && <p className="mt-5 max-w-2xl text-base leading-8 text-foreground/65">{subtitle}</p>}
+          <Actions actions={actions} />
+        </div>
+        <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-zinc-100">
+          {image && (
+            <Image
+              src={image.src}
+              alt={image.alt}
+              fill
+              sizes="(min-width: 1024px) 48vw, 100vw"
+              className="object-cover"
+            />
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function CompactHero({ eyebrow, title, subtitle, image, alignment = 'center' }: HeroBlockProps) {
+  const alignmentClass = alignmentClasses[alignment]
+
+  return (
+    <section className="overflow-hidden bg-zinc-50">
+      <div className="mx-auto grid max-w-6xl gap-6 px-6 py-12 md:grid-cols-[minmax(0,1fr)_220px] md:items-center">
+        <div className={`flex max-w-3xl flex-col ${alignmentClass}`}>
+          <Eyebrow>{eyebrow}</Eyebrow>
+          <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight text-foreground md:text-4xl">
+            {title}
+          </h1>
+          {subtitle && <p className="mt-4 max-w-2xl text-sm leading-7 text-foreground/60 md:text-base">{subtitle}</p>}
+        </div>
+        {image && (
+          <div className="relative hidden aspect-[4/3] overflow-hidden rounded-lg bg-white md:block">
+            <Image src={image.src} alt={image.alt} fill sizes="220px" className="object-cover" />
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
 
 export function HeroBlock(props: HeroBlockProps) {
-  const size = (props.size || 'medium') as HeroSize
-
-  // Full size → carousel
-  if (size === 'full' && props.slides && props.slides.length > 0) {
-    return <FullCarousel slides={props.slides} />
-  }
-
-  // Medium / short → static header
-  return (
-    <StaticHeader
-      size={size === 'short' ? 'short' : 'medium'}
-      title={props.title}
-      subtitle={props.subtitle}
-      image={props.image}
-      headingAlignment={props.headingAlignment}
-      childrenPosition={props.childrenPosition}
-    >
-      {props.children}
-    </StaticHeader>
-  )
+  if (props.variant === 'split') return <SplitHero {...props} />
+  if (props.variant === 'compact') return <CompactHero {...props} />
+  return <BackgroundHero {...props} />
 }
 
 export default HeroBlock

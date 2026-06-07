@@ -3,13 +3,12 @@
 /*
  * Brand colors.
  *
- * These two variables are the first thing to change when you start a new
- * project. Keep them in sync with `colors` in `src/site.config.ts`.
+ * EngAI updates these values from PMAI/PLAI direction. These CSS variables are
+ * the single source of truth for showcase brand colors.
  *
  * They are exposed to Tailwind as the `brand-primary` and `brand-alt` colors
- * below, so you can use them via utilities like `bg-brand-primary`,
- * `text-brand-alt`, and `border-brand-primary`. Components also read
- * `var(--brand-primary)` directly (e.g. the hero's no-image fallback).
+ * below, so components can use them via utilities like `bg-brand-primary`,
+ * `text-brand-alt`, and `border-brand-primary`.
  */
 :root {
   --brand-primary: #18181b;
@@ -26,12 +25,12 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
